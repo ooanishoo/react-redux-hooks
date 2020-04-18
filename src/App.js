@@ -8,12 +8,12 @@ function reducer(state, action) {
     case "INCREMENT_COUNT":
       return {
         ...state,
-        count: state.count + 1,
+        count: state.count + 1
       };
     case "DECREMENT_COUNT":
       return {
         ...state,
-        count: state.count - 1,
+        count: state.count - 1
       };
     default:
       return state;
@@ -57,8 +57,8 @@ function Counter() {
   return (
     <div>
       <h1>Counter: {count}</h1>
-      <button onChange={increment}>+</button>
-      <button onChange={decrement}>-</button>
+      <button onClick={increment}>+</button>
+      <button onClick={decrement}>-</button>
     </div>
   );
 }
