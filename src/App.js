@@ -1,32 +1,64 @@
 import React from "react";
 import { createStore } from "redux";
-import { Provider } from "react-redux";
+import { Provider, useSelector, useDispatch } from "react-redux";
 
 // create a reducer function
-function reducer(state, action){
-  return state;
+function reducer(state, action) {
+  switch (action.type) {
+    case "INCREMENT_COUNT":
+      return {
+        ...state,
+        count: state.count + 1,
+      };
+    case "DECREMENT_COUNT":
+      return {
+        ...state,
+        count: state.count - 1,
+      };
+    default:
+      return state;
+  }
 }
 
 // iniitalize initial state
 const INITIAL_STATE = {
-  count: 0
-}
+  count: 0,
+};
 
 // create a global store
 const store = createStore(reducer, INITIAL_STATE);
 
 export default function App() {
   return (
-    <div>
+    <Provider store={store}>
       <Counter />
-    </div>
+    </Provider>
   );
 }
 
 function Counter() {
+  // useSelector is used to retrieve state from redux store
+  const count = useSelector((state) => state.count);
+
+  // useDispatch is used to dispatch an action to redux store
+  const dispatch = useDispatch();
+
+  function increment() {
+    dispatch({
+      type: "INCREMENT_COUNT",
+    });
+  }
+  function decrement() {
+    dispatch({
+      type: "DECREMENT_COUNT",
+    });
+  }
+
   return (
     <div>
-      <h1>Counter:</h1>
+      <h1>Counter: {count}</h1>
+      <button onChange={increment}>+</button>
+      <button onChange={decrement}>-</button>
     </div>
   );
 }
