@@ -17,10 +17,10 @@ function reducer(state = INITIAL_STATE, action) {
       };
 
     case "CHANGE_NAME":
-      return{
+      return {
         ...state,
-        name: state.name
-      }
+        name: action.payload,
+      };
     default:
       return state;
   }
@@ -29,7 +29,7 @@ function reducer(state = INITIAL_STATE, action) {
 // iniitalize initial state
 const INITIAL_STATE = {
   count: 0,
-  name:""
+  name: "",
 };
 
 // create a global store
@@ -45,27 +45,24 @@ export default function App() {
 }
 
 function Name() {
-  const name = useSelector((state) => state.name);
   const dispatch = useDispatch();
 
-  function handleNameChange(event){
+  function handleNameChange(event) {
     dispatch({
       type: "CHANGE_NAME",
-      payload: event.target.value
+      payload: event.target.value,
     });
   }
   return (
     <div>
-      <h3>Your name is: {name}</h3>
-      <h2>Name:</h2>
-      <input onChange={handleNameChange}></input>
+      <input placeholder="Enter your name" onChange={handleNameChange}></input>
     </div>
   );
 }
 
 function Counter() {
   // useSelector is used to retrieve state from redux store
-  const count = useSelector((state) => state.count);
+  const {count, name} = useSelector((state) => state);
 
   // useDispatch is used to dispatch an action to redux store
   const dispatch = useDispatch();
@@ -86,6 +83,7 @@ function Counter() {
       <h1>Counter: {count}</h1>
       <button onClick={increment}>+</button>
       <button onClick={decrement}>-</button>
+      <h3>Your name is: {name}</h3>
     </div>
   );
 }
