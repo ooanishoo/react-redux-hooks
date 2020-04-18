@@ -3,18 +3,24 @@ import { createStore } from "redux";
 import { Provider, useSelector, useDispatch } from "react-redux";
 
 // create a reducer function
-function reducer(state, action) {
+function reducer(state = INITIAL_STATE, action) {
   switch (action.type) {
     case "INCREMENT_COUNT":
       return {
         ...state,
-        count: state.count + 1
+        count: state.count + 1,
       };
     case "DECREMENT_COUNT":
       return {
         ...state,
-        count: state.count - 1
+        count: state.count - 1,
       };
+
+    case "CHANGE_NAME":
+      return{
+        ...state,
+        name: state.name
+      }
     default:
       return state;
   }
@@ -23,6 +29,7 @@ function reducer(state, action) {
 // iniitalize initial state
 const INITIAL_STATE = {
   count: 0,
+  name:""
 };
 
 // create a global store
@@ -32,7 +39,27 @@ export default function App() {
   return (
     <Provider store={store}>
       <Counter />
+      <Name />
     </Provider>
+  );
+}
+
+function Name() {
+  const name = useSelector((state) => state.name);
+  const dispatch = useDispatch();
+
+  function handleNameChange(event){
+    dispatch({
+      type: "CHANGE_NAME",
+      payload: event.target.value
+    });
+  }
+  return (
+    <div>
+      <h3>Your name is: {name}</h3>
+      <h2>Name:</h2>
+      <input onChange={handleNameChange}></input>
+    </div>
   );
 }
 
