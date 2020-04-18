@@ -1,9 +1,12 @@
 import React from "react";
-import { createStore } from "redux";
+import { createStore, combineReducers } from "redux";
 import { Provider, useSelector, useDispatch } from "react-redux";
 
+// iniitalize initial state
+const INITIAL_STATE = {};
+
 // create a reducer function
-function reducer(state = INITIAL_STATE, action) {
+function counterReducer(state = { count: 0 }, action) {
   switch (action.type) {
     case "INCREMENT_COUNT":
       return {
@@ -16,6 +19,13 @@ function reducer(state = INITIAL_STATE, action) {
         count: state.count - 1,
       };
 
+    default:
+      return state;
+  }
+}
+
+function nameReducer(state = { name: "" }, action) {
+  switch (action.type) {
     case "CHANGE_NAME":
       return {
         ...state,
@@ -26,14 +36,10 @@ function reducer(state = INITIAL_STATE, action) {
   }
 }
 
-// iniitalize initial state
-const INITIAL_STATE = {
-  count: 0,
-  name: "",
-};
+const rootReducer = combineReducers({ counterReducer, nameReducer });
 
 // create a global store
-const store = createStore(reducer, INITIAL_STATE);
+const store = createStore(rootReducer, INITIAL_STATE);
 
 export default function App() {
   return (
@@ -62,7 +68,10 @@ function Name() {
 
 function Counter() {
   // useSelector is used to retrieve state from redux store
-  const {count, name} = useSelector((state) => state);
+  const { count, name } = useSelector(state => ({
+    ...state.counterReducer,
+    ...state.nameReducer
+  }));
 
   // useDispatch is used to dispatch an action to redux store
   const dispatch = useDispatch();
