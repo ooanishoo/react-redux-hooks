@@ -1,26 +1,32 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { createStore } from "redux";
+import { Provider } from "react-redux";
 
-function App() {
+// create a reducer function
+function reducer(state, action){
+  return state;
+}
+
+// iniitalize initial state
+const INITIAL_STATE = {
+  count: 0
+}
+
+// create a global store
+const store = createStore(reducer, INITIAL_STATE);
+
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <Counter />
     </div>
   );
 }
 
-export default App;
+function Counter() {
+  return (
+    <div>
+      <h1>Counter:</h1>
+    </div>
+  );
+}
