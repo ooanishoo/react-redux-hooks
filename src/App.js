@@ -1,98 +1,133 @@
-import React from "react";
-import { createStore, combineReducers } from "redux";
-import { Provider, useSelector, useDispatch } from "react-redux";
+import React, { Component, useState, useEffect } from "react";
+import { createStore } from "redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import uuid from "react-uuid";
 
-// iniitalize initial state
-const INITIAL_STATE = {};
+const INITIAL_STATE = {
+  todos: [
+    {
+      id: uuid(),
+      name: "Go to gym",
+      complete: false,
+    },
+    {
+      id: uuid(),
+      name: "Do laundry",
+      complete: false,
+    },
+  ],
+};
 
-// create a reducer function
-function counterReducer(state = { count: 0 }, action) {
+function reducer(state = INITIAL_STATE, action) {
+  console.log(action.payload, 'payload is');
   switch (action.type) {
-    case "INCREMENT_COUNT":
+    case "ADD_TODO":
       return {
         ...state,
-        count: state.count + 1,
+        todos: [...state.todos, action.payload],
       };
-    case "DECREMENT_COUNT":
+    case "TOGGLE_TODO":
+      console.log("inside toggle");
       return {
         ...state,
-        count: state.count - 1,
+        todos: state.todos.map((todo) => {
+          if (todo.id === action.payload) {
+            console.log(todo.complete);
+            todo.complete = !todo.complete;
+            console.log(todo.complete);
+          }
+          return todo;
+        }),
       };
-
     default:
       return state;
   }
 }
 
-function nameReducer(state = { name: "" }, action) {
-  switch (action.type) {
-    case "CHANGE_NAME":
-      return {
-        ...state,
-        name: action.payload,
-      };
-    default:
-      return state;
+const store = createStore(
+  reducer,
+  INITIAL_STATE,
+  window.devToolsExtension && window.devToolsExtension()
+);
+
+export default class App extends Component {
+  render() {
+    return (
+      <Provider store={store}>
+        <h1>Todo App</h1>
+        <AddTodo />
+        <ListTodo />
+      </Provider>
+    );
   }
 }
 
-const rootReducer = combineReducers({ counterReducer, nameReducer });
-
-// create a global store
-const store = createStore(rootReducer, INITIAL_STATE);
-
-export default function App() {
-  return (
-    <Provider store={store}>
-      <Counter />
-      <Name />
-    </Provider>
-  );
-}
-
-function Name() {
+function AddTodo() {
+  const [todo, setTodo] = useState("");
   const dispatch = useDispatch();
+  useEffect(() => {
+    console.log(todo);
+  }, [todo]);
 
-  function handleNameChange(event) {
-    dispatch({
-      type: "CHANGE_NAME",
-      payload: event.target.value,
-    });
-  }
+  const onChange = (event) => {
+    setTodo(event.target.value);
+  };
+  const onSubmit = (event) => {
+    event.preventDefault();
+    if (todo === "") return;
+    dispatch(addTodo());
+    setTodo("");
+  };
+
+  const addTodo = () => {
+    return {
+      type: "ADD_TODO",
+      payload: {
+        id: uuid(),
+        name: todo,
+        complete: false,
+      },
+    };
+  };
   return (
     <div>
-      <input placeholder="Enter your name" onChange={handleNameChange}></input>
+      <form onSubmit={onSubmit}>
+        <input
+          placeholder="Enter todo"
+          onChange={onChange}
+          value={todo}
+        ></input>
+        <button type="submit">Add</button>
+      </form>
     </div>
   );
 }
 
-function Counter() {
-  // useSelector is used to retrieve state from redux store
-  const { count, name } = useSelector(state => ({
-    ...state.counterReducer,
-    ...state.nameReducer
-  }));
-
-  // useDispatch is used to dispatch an action to redux store
+function ListTodo() {
   const dispatch = useDispatch();
-
-  function increment() {
+  const todos = useSelector((state) => state.todos);
+  const toggleTodo = (id) => {
+    console.log(id,"toggling");
     dispatch({
-      type: "INCREMENT_COUNT",
+      type: "TOGGLE_TODO",
+      payload: id,
     });
-  }
-  function decrement() {
-    dispatch({
-      type: "DECREMENT_COUNT",
-    });
-  }
-
+  };
   return (
     <div>
-      <h1>Counter: {count}</h1>
-      <button onClick={increment}>+</button>
-      <button onClick={decrement}>-</button>
-      <h3>Your name is: {name}</h3>
+      <h1>Todo List</h1>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.complete}
+              onChange={toggleTodo.bind(todo.id)}
+            />
+            {todo.name}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
