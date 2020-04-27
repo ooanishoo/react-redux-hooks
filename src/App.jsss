@@ -1,0 +1,133 @@
+import React, { Component, useState, useEffect } from "react";
+import { createStore } from "redux";
+import { Provider, useDispatch, useSelector } from "react-redux";
+import uuid from "react-uuid";
+
+const INITIAL_STATE = {
+  todos: [
+    {
+      id: uuid(),
+      name: "Go to gym",
+      complete: false,
+    },
+    {
+      id: uuid(),
+      name: "Do laundry",
+      complete: false,
+    },
+  ],
+};
+
+function reducer(state = INITIAL_STATE, action) {
+  console.log(action.payload, 'payload is');
+  switch (action.type) {
+    case "ADD_TODO":
+      return {
+        ...state,
+        todos: [...state.todos, action.payload],
+      };
+    case "TOGGLE_TODO":
+      console.log("inside toggle");
+      return {
+        ...state,
+        todos: state.todos.map((todo) => {
+          if (todo.id === action.payload) {
+            console.log(todo.complete);
+            todo.complete = !todo.complete;
+            console.log(todo.complete);
+          }
+          return todo;
+        }),
+      };
+    default:
+      return state;
+  }
+}
+
+const store = createStore(
+  reducer,
+  INITIAL_STATE,
+  window.devToolsExtension && window.devToolsExtension()
+);
+
+export default class App extends Component {
+  render() {
+    return (
+      <Provider store={store}>
+        <h1>Todo App</h1>
+        <AddTodo />
+        <ListTodo />
+      </Provider>
+    );
+  }
+}
+
+function AddTodo() {
+  const [todo, setTodo] = useState("");
+  const dispatch = useDispatch();
+  useEffect(() => {
+    console.log(todo);
+  }, [todo]);
+
+  const onChange = (event) => {
+    setTodo(event.target.value);
+  };
+  const onSubmit = (event) => {
+    event.preventDefault();
+    if (todo === "") return;
+    dispatch(addTodo());
+    setTodo("");
+  };
+
+  const addTodo = () => {
+    return {
+      type: "ADD_TODO",
+      payload: {
+        id: uuid(),
+        name: todo,
+        complete: false,
+      },
+    };
+  };
+  return (
+    <div>
+      <form onSubmit={onSubmit}>
+        <input
+          placeholder="Enter todo"
+          onChange={onChange}
+          value={todo}
+        ></input>
+        <button type="submit">Add</button>
+      </form>
+    </div>
+  );
+}
+
+function ListTodo() {
+  const dispatch = useDispatch();
+  const todos = useSelector((state) => state.todos);
+  const toggleTodo = (id) => {
+    console.log(id,"toggling");
+    dispatch({
+      type: "TOGGLE_TODO",
+      payload: id,
+    });
+  };
+  return (
+    <div>
+      <h1>Todo List</h1>
+      <ul>
+        {todos.map((todo) => (
+          <li key={todo.id}>
+            <input
+              type="checkbox"
+              checked={todo.complete}
+              onChange={toggleTodo.bind(todo.id)}
+            />
+            {todo.name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
