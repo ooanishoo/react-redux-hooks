@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useState } from "react";
 import login from "./utils/utils";
 
-export default function App() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
