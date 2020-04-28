@@ -67,6 +67,11 @@ const loginReducer = (state = initialState, action) => {
         ...state,
         todos: [...state.todos, action.payload],
       };
+    case "delete_todo":
+      return {
+        ...state,
+        todos: state.todos.filter((todo) => todo.id !== action.payload),
+      };
     default:
       return state;
   }
@@ -140,7 +145,7 @@ export default function App() {
             </form>
           </div>
         )}
-        <h1>Todo List</h1>
+        <h1>Todo List ({todos.length})</h1>
         <AddTodo />
         <ListTodo todos={todos} />
       </StateContext.Provider>
@@ -150,19 +155,24 @@ export default function App() {
 
 function AddTodo() {
   const dispatch = useContext(DispatchContext);
+  const state = useContext(StateContext);
   const [name, setName] = useState("");
 
   const onSubmit = (evt) => {
     evt.preventDefault();
-    dispatch({
-      type: "add_todo",
-      payload: {
-        id: Math.random(),
-        name: name,
-        done: true,
-      },
-    });
-    setName("");
+    if (state.isLoggedIn) {
+      dispatch({
+        type: "add_todo",
+        payload: {
+          id: Math.random(),
+          name: name,
+          done: false,
+        },
+      });
+      setName("");
+    } else {
+      alert("Please login to click !");
+    }
   };
 
   return (
@@ -193,13 +203,19 @@ function TodoItem({ todo, isLoggedIn }) {
   const { id, name, done } = todo;
   const state = useContext(StateContext);
   const dispatch = useContext(DispatchContext);
+  const deleteTodo = () => {
+    dispatch({
+      type: "delete_todo",
+      payload: id,
+    });
+  };
 
   return (
     <>
       <li key={id}>
         <input
           type="checkbox"
-          value={done}
+          checked={done}
           onClick={(evt) => {
             if (state.isLoggedIn !== true) {
               alert("Please login to click !");
@@ -213,6 +229,7 @@ function TodoItem({ todo, isLoggedIn }) {
           }}
         />
         {name}
+        <button onClick={deleteTodo}>Delete</button>
       </li>
     </>
   );
