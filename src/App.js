@@ -1,4 +1,4 @@
-import React, { useReducer, useContext } from "react";
+import React, { useReducer, useContext, useState } from "react";
 import login from "./utils/utils";
 
 const initialState = {
@@ -60,6 +60,12 @@ const loginReducer = (state = initialState, action) => {
           }
           return todo;
         }),
+      };
+
+    case "add_todo":
+      return {
+        ...state,
+        todos: [...state.todos, action.payload],
       };
     default:
       return state;
@@ -135,9 +141,41 @@ export default function App() {
           </div>
         )}
         <h1>Todo List</h1>
+        <AddTodo />
         <ListTodo todos={todos} />
       </StateContext.Provider>
     </DispatchContext.Provider>
+  );
+}
+
+function AddTodo() {
+  const dispatch = useContext(DispatchContext);
+  const [name, setName] = useState("");
+
+  const onSubmit = (evt) => {
+    evt.preventDefault();
+    dispatch({
+      type: "add_todo",
+      payload: {
+        id: Math.random(),
+        name: name,
+        done: true,
+      },
+    });
+    setName("");
+  };
+
+  return (
+    <div>
+      <form type="submit" onSubmit={onSubmit}>
+        <input
+          placeholder="Enter name"
+          onChange={(evt) => setName(evt.target.value)}
+          value={name}
+        ></input>
+        <button type="submit">Add</button>
+      </form>
+    </div>
   );
 }
 
