@@ -1,8 +1,27 @@
 import React, { useReducer } from "react";
 import login from "./utils/utils";
 
-export default function App() {
-  const loginReducer = (state, action) => {
+export default function LoginContext() {
+  const initialState = {
+    email: "",
+    password: "",
+    isLoading: false,
+    error: "",
+    isLoggedIn: false,
+    todos: [
+      {
+        id: Math.random(),
+        name: "go to gym",
+        done: true,
+      },
+      {
+        id: Math.random(),
+        name: "go to groccery",
+        done: false,
+      },
+    ],
+  };
+  const loginReducer = (state = initialState, action) => {
     switch (action.type) {
       case "login":
         return {
@@ -11,16 +30,18 @@ export default function App() {
           error: "",
         };
       case "success":
-        return { isLoggedIn: true, isLoading: false };
+        return { ...state, isLoggedIn: true, isLoading: false };
       case "error":
         return {
+          ...state,
           error: "Incorrect email or password. Try again!",
           isLoading: false,
-          email:'',
-          password:''
+          email: "",
+          password: "",
         };
       case "logout":
         return {
+          ...state,
           isLoggedIn: false,
           email: "",
           password: "",
@@ -30,21 +51,24 @@ export default function App() {
           ...state,
           [action.payload.field]: action.payload.value,
         };
+      case "toggle_todo":
+        return {
+          ...state,
+          todos: state.todos.map((todo) => {
+            if (todo.id === action.payload) {
+              todo.done = !todo.done;
+            }
+            return todo;
+          }),
+        };
       default:
         return state;
     }
   };
 
-  const initialState = {
-    email: "",
-    password: "",
-    isLoading: false,
-    error: "",
-    isLoggedIn: false,
-  };
   const [state, dispatch] = useReducer(loginReducer, initialState);
 
-  const { email, password, isLoading, error, isLoggedIn } = state;
+  const { email, password, isLoading, error, isLoggedIn, todos } = state;
 
   const onSubmit = async (evt) => {
     dispatch({ type: "login" });
@@ -61,45 +85,72 @@ export default function App() {
     dispatch({ type: "logout" });
   };
 
-  return isLoggedIn ? (
+  return (
     <div>
-      <h1>Welcome {email} !</h1>
-      <button onClick={logout}>Logout</button>
-    </div>
-  ) : (
-    <div>
-      <h1>Login Form (useReducer)</h1>
-      <form
-        style={{ display: "flex", flexDirection: "column", padding: 10 }}
-        onSubmit={onSubmit}
-      >
-        <p>{error && <span>{error}</span>}</p>
-        <input
-          type="text"
-          name="email"
-          placeholder="Email"
-          value={email}
-          onChange={(event) =>
-            dispatch({
-              type: "field",
-              payload: { field: "email", value: event.target.value },
-            })
-          }
-        ></input>
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={password}
-          onChange={(event) =>
-            dispatch({
-              type: "field",
-              payload: { field: "password", value: event.target.value },
-            })
-          }
-        ></input>
-        <button type="submit">{!isLoading ? "Login" : "Logging in..."}</button>
-      </form>
+      {isLoggedIn ? (
+        <div>
+          <h1>Welcome {email} !</h1>
+          <button onClick={logout}>Logout</button>
+        </div>
+      ) : (
+        <div>
+          <h1>Login Form (useReducer)</h1>
+          <form
+            style={{ display: "flex", flexDirection: "column", padding: 10 }}
+            onSubmit={onSubmit}
+          >
+            <p>{error && <span>{error}</span>}</p>
+            <input
+              type="text"
+              name="email"
+              placeholder="Email"
+              value={email}
+              onChange={(event) =>
+                dispatch({
+                  type: "field",
+                  payload: { field: "email", value: event.target.value },
+                })
+              }
+            ></input>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={password}
+              onChange={(event) =>
+                dispatch({
+                  type: "field",
+                  payload: { field: "password", value: event.target.value },
+                })
+              }
+            ></input>
+            <button type="submit">
+              {!isLoading ? "Login" : "Logging in..."}
+            </button>
+          </form>
+        </div>
+      )}
+      <h1>Todo List</h1>
+      {todos.map((todo) => (
+        <li key={todo.id}>
+          <input
+            type="checkbox"
+            value={todo.done}
+            onClick={(evt) => {
+              if (isLoggedIn !== true) {
+                alert("Please login to click !");
+                evt.preventDefault();
+              } else {
+                dispatch({
+                  type: "toggle_todo",
+                  payload: todo.id,
+                });
+              }
+            }}
+          />
+          {todo.name}
+        </li>
+      ))}
     </div>
   );
 }
