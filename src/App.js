@@ -1,236 +1,109 @@
-import React, { useReducer, useContext, useState } from "react";
-import login from "./utils/utils";
+import React, { useEffect, useReducer, useRef } from "react";
+import { useState } from "react";
 
-const initialState = {
-  email: "",
-  password: "",
+const INITIAL_STATE = {
   isLoading: false,
-  error: "",
-  isLoggedIn: false,
-  todos: [
-    {
-      id: Math.random(),
-      name: "go to gym",
-      done: true,
-    },
-    {
-      id: Math.random(),
-      name: "go to groccery",
-      done: false,
-    },
-  ],
+  giffs: [],
 };
 
-const loginReducer = (state = initialState, action) => {
-  switch (action.type) {
-    case "login":
+function giffReducer(state, { type, payload }) {
+  switch (type) {
+    case "load_giff":
+      console.log({payload});
+      return {
+        ...state,
+        giffs: payload
+      }
+
+    case "search_start":
       return {
         ...state,
         isLoading: true,
-        error: "",
       };
-    case "success":
-      return { ...state, isLoggedIn: true, isLoading: false };
-    case "error":
+    case "search_complete":
       return {
         ...state,
-        error: "Incorrect email or password. Try again!",
+        giffs: payload,
         isLoading: false,
-        email: "",
-        password: "",
-      };
-    case "logout":
-      return {
-        ...state,
-        isLoggedIn: false,
-        email: "",
-        password: "",
-      };
-    case "field":
-      return {
-        ...state,
-        [action.payload.field]: action.payload.value,
-      };
-    case "toggle_todo":
-      return {
-        ...state,
-        todos: state.todos.map((todo) => {
-          if (todo.id === action.payload) {
-            todo.done = !todo.done;
-          }
-          return todo;
-        }),
       };
 
-    case "add_todo":
-      return {
-        ...state,
-        todos: [...state.todos, action.payload],
-      };
-    case "delete_todo":
-      return {
-        ...state,
-        todos: state.todos.filter((todo) => todo.id !== action.payload),
-      };
     default:
       return state;
   }
+}
+
+const fetchData = async (query) => {
+  try {
+    const response = await fetch(
+      `https://api.giphy.com/v1/gifs/search?api_key=w2yRw08pa8gLRyryPwXRzx0eAkDWqYbj&q=${query}&limit=10&offset=0&rating=G&lang=en`
+    );
+
+    const json = await response.json();
+    return json.data.map((item) => item.images.preview.mp4);
+  } catch (error) {}
 };
 
-const StateContext = React.createContext();
-const DispatchContext = React.createContext();
-
 export default function App() {
-  const [state, dispatch] = useReducer(loginReducer, initialState);
+  const [search, setSearch] = useState("");
+  const [query, setQuery] = useState("");
 
-  const { email, password, isLoading, error, isLoggedIn, todos } = state;
+  const [state, dispatch] = useReducer(giffReducer, INITIAL_STATE);
+  const { giffs, isLoading } = state;
 
-  const onSubmit = async (evt) => {
-    dispatch({ type: "login" });
-    evt.preventDefault();
-    try {
-      await login({ email, password });
-      dispatch({ type: "success" });
-    } catch (er) {
-      dispatch({ type: "error" });
+  const didReload = useRef(false);
+
+  useEffect(() => {
+
+    if(!didReload.current){
+      console.log('running.....');
+      const data = JSON.parse(localStorage.getItem("giffs"));
+      console.log({data});
+      dispatch({ type: "load_giff", payload: data });
+      didReload.current = true;
     }
+  }); // this useEffect runs only once
+
+  useEffect(() => {
+    localStorage.setItem("giffs", JSON.stringify(giffs));
+  }, [giffs]);
+
+  // Create context objects
+  const DispatchContext = React.createContext();
+
+  const searchGifs = (e) => {
+    e.preventDefault();
+    setQuery(search);
+    dispatch({ type: "search_start" });
   };
 
-  const logout = () => {
-    dispatch({ type: "logout" });
-  };
+  useEffect(() => {
+    if (query !== "") {
+      fetchData(query).then((giffs) =>
+        dispatch({
+          type: "search_complete",
+          payload: giffs,
+        })
+      );
+    }
+  }, [query]);
+
   return (
     <DispatchContext.Provider value={dispatch}>
-      <StateContext.Provider value={state}>
-        {isLoggedIn ? (
-          <div>
-            <h1>Welcome {email} !</h1>
-            <button onClick={logout}>Logout</button>
-          </div>
-        ) : (
-          <div>
-            <h1>Login Form (useReducer)</h1>
-            <form
-              style={{ display: "flex", flexDirection: "column", padding: 10 }}
-              onSubmit={onSubmit}
-            >
-              <p>{error && <span>{error}</span>}</p>
-              <input
-                type="text"
-                name="email"
-                placeholder="Email"
-                value={email}
-                onChange={(event) =>
-                  dispatch({
-                    type: "field",
-                    payload: { field: "email", value: event.target.value },
-                  })
-                }
-              ></input>
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={password}
-                onChange={(event) =>
-                  dispatch({
-                    type: "field",
-                    payload: { field: "password", value: event.target.value },
-                  })
-                }
-              ></input>
-              <button type="submit">
-                {!isLoading ? "Login" : "Logging in..."}
-              </button>
-            </form>
-          </div>
-        )}
-        <h1>Todo List ({todos.length})</h1>
-        <AddTodo />
-        <ListTodo todos={todos} />
-      </StateContext.Provider>
-    </DispatchContext.Provider>
-  );
-}
-
-function AddTodo() {
-  const dispatch = useContext(DispatchContext);
-  const state = useContext(StateContext);
-  const [name, setName] = useState("");
-
-  const onSubmit = (evt) => {
-    evt.preventDefault();
-    if (state.isLoggedIn) {
-      dispatch({
-        type: "add_todo",
-        payload: {
-          id: Math.random(),
-          name: name,
-          done: false,
-        },
-      });
-      setName("");
-    } else {
-      alert("Please login to click !");
-    }
-  };
-
-  return (
-    <div>
-      <form type="submit" onSubmit={onSubmit}>
+      <h1>Async React hooks</h1>
+      <form onSubmit={searchGifs}>
         <input
-          placeholder="Enter name"
-          onChange={(evt) => setName(evt.target.value)}
-          value={name}
-        ></input>
-        <button type="submit">Add</button>
-      </form>
-    </div>
-  );
-}
-
-function ListTodo({ todos }) {
-  return (
-    <div>
-      {todos.map((todo) => (
-        <TodoItem todo={todo} key={todo.id} />
-      ))}
-    </div>
-  );
-}
-
-function TodoItem({ todo, isLoggedIn }) {
-  const { id, name, done } = todo;
-  const state = useContext(StateContext);
-  const dispatch = useContext(DispatchContext);
-  const deleteTodo = () => {
-    dispatch({
-      type: "delete_todo",
-      payload: id,
-    });
-  };
-
-  return (
-    <>
-      <li key={id}>
-        <input
-          type="checkbox"
-          checked={done}
-          onClick={(evt) => {
-            if (state.isLoggedIn !== true) {
-              alert("Please login to click !");
-              evt.preventDefault();
-            } else {
-              dispatch({
-                type: "toggle_todo",
-                payload: id,
-              });
-            }
-          }}
+          placeholder="Search giffs..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
-        {name}
-        <button onClick={deleteTodo}>Delete</button>
-      </li>
-    </>
+        <button type="submit">Search</button>
+      </form>
+
+      {isLoading ? (
+        <h1>Searching...</h1>
+      ) : (
+        giffs.map((giff) => <video key={giff} src={giff} />)
+      )}
+    </DispatchContext.Provider>
   );
 }
