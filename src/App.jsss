@@ -1,7 +1,8 @@
 import React, { Component, useState, useEffect } from "react";
-import { createStore } from "redux";
+import { createStore, applyMiddleware } from "redux";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import uuid from "react-uuid";
+import logger from "redux-logger";
 
 const INITIAL_STATE = {
   todos: [
@@ -19,7 +20,7 @@ const INITIAL_STATE = {
 };
 
 function reducer(state = INITIAL_STATE, action) {
-  console.log(action.payload, 'payload is');
+  console.log(action.payload, "payload is");
   switch (action.type) {
     case "ADD_TODO":
       return {
@@ -44,11 +45,7 @@ function reducer(state = INITIAL_STATE, action) {
   }
 }
 
-const store = createStore(
-  reducer,
-  INITIAL_STATE,
-  window.devToolsExtension && window.devToolsExtension()
-);
+const store = createStore(reducer, INITIAL_STATE, applyMiddleware(logger));
 
 export default class App extends Component {
   render() {
@@ -107,7 +104,7 @@ function ListTodo() {
   const dispatch = useDispatch();
   const todos = useSelector((state) => state.todos);
   const toggleTodo = (id) => {
-    console.log(id,"toggling");
+    console.log(id, "toggling");
     dispatch({
       type: "TOGGLE_TODO",
       payload: id,
@@ -122,7 +119,7 @@ function ListTodo() {
             <input
               type="checkbox"
               checked={todo.complete}
-              onChange={toggleTodo.bind(todo.id)}
+              onChange={() => toggleTodo(todo.id)}
             />
             {todo.name}
           </li>

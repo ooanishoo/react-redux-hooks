@@ -1,54 +1,18 @@
 import React, { useEffect, useReducer, useRef } from "react";
 import { useState } from "react";
+import { fetchData } from "./api";
+import giffReducer from "./redux/reducer";
 
 const INITIAL_STATE = {
   isLoading: false,
   giffs: [],
 };
 
-function giffReducer(state, { type, payload }) {
-  switch (type) {
-    case "load_giff":
-      console.log({ payload });
-      return {
-        ...state,
-        giffs: payload,
-      };
-
-    case "search_start":
-      return {
-        ...state,
-        isLoading: true,
-      };
-    case "search_complete":
-      return {
-        ...state,
-        giffs: payload,
-        isLoading: false,
-      };
-
-    default:
-      return state;
-  }
-}
-
-const fetchData = async (query) => {
-  try {
-    const apiKey = process.env.REACT_APP_GIPHY_API_KEY;
-    const response = await fetch(
-      `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${query}&limit=10&offset=0&rating=G&lang=en`
-    );
-
-    const json = await response.json();
-    return json.data.map((item) => item.images.preview.mp4);
-  } catch (error) {}
-};
-
 const useSetToLocalStorage = (giffs) => {
   useEffect(() => {
     localStorage.setItem("giffs", JSON.stringify(giffs));
   }, [giffs]);
-}
+};
 
 export default function App() {
   const [search, setSearch] = useState("");
