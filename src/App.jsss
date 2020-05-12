@@ -2,7 +2,7 @@ import React, { Component, useState, useEffect } from "react";
 import { createStore, applyMiddleware } from "redux";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import uuid from "react-uuid";
-import logger from "redux-logger";
+import { createLogger } from "redux-logger";
 
 const INITIAL_STATE = {
   todos: [
@@ -34,8 +34,12 @@ function reducer(state = INITIAL_STATE, action) {
         todos: state.todos.map((todo) => {
           if (todo.id === action.payload) {
             console.log(todo.complete);
+            console.log({ todo });
+
             todo.complete = !todo.complete;
             console.log(todo.complete);
+            console.log({ todo });
+            return todo;
           }
           return todo;
         }),
@@ -44,7 +48,7 @@ function reducer(state = INITIAL_STATE, action) {
       return state;
   }
 }
-
+const logger = createLogger({ collapsed: false });
 const store = createStore(reducer, INITIAL_STATE, applyMiddleware(logger));
 
 export default class App extends Component {
